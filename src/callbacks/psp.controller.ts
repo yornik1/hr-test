@@ -8,6 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiHeader } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { BrandHeaderGuard } from '../common/brand-header.guard';
 import { Brand } from '../common/brand.decorator';
@@ -20,6 +21,7 @@ export class PspController {
   constructor(private readonly ingest: IngestService) {}
 
   @Post(':provider')
+  @ApiHeader({ name: 'X-Brand-Id', required: true, example: 'alpha' })
   async handle(
     @Param('provider') provider: string,
     @Body() dto: CallbackDto,

@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hr
+      POSTGRES_PASSWORD: hr
+      POSTGRES_DB: hr_test
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hr -d hr_test']
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    # migrations first, then the app; the service is not up until the schema is
+    command: sh -c "node node_modules/typeorm/cli.js migration:run -d dist/persistence/data-source.js && node dist/main"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://hr:hr@db:5432/hr_test
+      JWT_SECRET: compose-only-secret-change-me
+      JWT_TTL_SECONDS: 86400
+      BRANDS: alpha,beta
+      LOG_LEVEL: info
+    ports:
+      - '3000:3000'
+
+volumes:
+  pgdata:
